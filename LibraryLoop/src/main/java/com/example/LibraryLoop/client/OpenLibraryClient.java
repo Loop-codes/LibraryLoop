@@ -1,5 +1,6 @@
 package com.example.LibraryLoop.client;
 
+import com.example.LibraryLoop.dto.edition.OpenLibraryEditionsResponse;
 import com.example.LibraryLoop.dto.openLibrary.OpenLibraryResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -22,10 +23,11 @@ public class OpenLibraryClient {
         return restTemplate.getForObject(url, OpenLibraryResponse.class);
     }
 
-    public String getEditions(String workId) {
+    public OpenLibraryEditionsResponse getEditions(String workId) {
 
         String url = BASE_URL + "/works/" + workId + "/editions.json";
 
-        return restTemplate.getForObject(url, String.class);
+        return restTemplate.getForObject(url, OpenLibraryEditionsResponse.class);
     }
+
 }

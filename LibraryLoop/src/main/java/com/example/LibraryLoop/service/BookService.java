@@ -1,44 +1,36 @@
 package com.example.LibraryLoop.service;
 
 import com.example.LibraryLoop.client.OpenLibraryClient;
-import com.example.LibraryLoop.Repository.userRepository;
-import com.example.LibraryLoop.dto.book.BookSearchResponseDTO;
-import com.example.LibraryLoop.dto.openLibrary.OpenLibraryResponse;
+import com.example.LibraryLoop.dto.edition.OpenLibraryEditionsResponse;
+import com.example.LibraryLoop.dto.read.ReadLinkDTO;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
+@RequiredArgsConstructor
 public class BookService {
 
-    private final OpenLibraryClient client;
+    private final OpenLibraryClient openLibraryClient;
 
-    public BookService(OpenLibraryClient client, userRepository userRepository) {
-        this.client = client;
-    }
+    public ReadLinkDTO getReadLink(String workId) {
 
-    public String searchBook(String title) {
-        return OpenLibraryClient.searchBooks(title).toString();
-    }
+        OpenLibraryEditionsResponse response =
+                openLibraryClient.getEditions(workId);
 
-    public String getEditions(String workId) {
-        return client.getEditions(workId);
-    }
+        if (response.getEntries() == null) {
+            return new ReadLinkDTO(false, null);
+        }
 
-    public List<BookSearchResponseDTO> searchBooks(String title) {
+        for (OpenLibraryEditionsResponse.EditionDoc edition : response.getEntries()) {
 
-        OpenLibraryResponse response = OpenLibraryClient.searchBooks(title);
+            if (edition.getOcaid() != null) {
 
-        return response.getDocs()
-                .stream()
-                .map(doc -> new BookSearchResponseDTO(
-                        doc.getTitle(),
-                        doc.getCover_i(),
-                        doc.getFirst_publish_year(),
-                        doc.getKey(),
-                        doc.getLanguage(),
-                        doc.getAuthor_key()
-                ))
-                .toList();
+                String link = "https://archive.org/details/" + edition.getOcaid();
+
+                return new ReadLinkDTO(true, link);
+            }
+        }
+
+        return new ReadLinkDTO(false, null);
     }
 }

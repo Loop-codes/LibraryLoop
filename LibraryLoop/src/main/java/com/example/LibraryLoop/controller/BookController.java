@@ -1,28 +1,19 @@
 package com.example.LibraryLoop.controller;
 
-import com.example.LibraryLoop.dto.book.BookSearchResponseDTO;
+import com.example.LibraryLoop.dto.read.ReadLinkDTO;
 import com.example.LibraryLoop.service.BookService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/books")
+@RequiredArgsConstructor
 public class BookController {
 
     private final BookService service;
 
-    public BookController(BookService service) {
-        this.service = service;
-    }
-
-    @GetMapping("/search")
-    public List<BookSearchResponseDTO> search(@RequestParam String title) {
-        return service.searchBooks(title);
-    }
-
-    @GetMapping("/editions/{workId}")
-    public String editions(@PathVariable String workId) {
-        return service.getEditions(workId);
+    @GetMapping("/{workId}/read")
+    public ReadLinkDTO getReadLink(@PathVariable String workId) {
+        return service.getReadLink(workId);
     }
 }
