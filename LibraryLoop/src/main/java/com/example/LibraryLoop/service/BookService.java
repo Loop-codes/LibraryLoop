@@ -43,6 +43,13 @@ public class BookService {
         OpenLibraryResponse response =
                 OpenLibraryClient.searchBooks(title);
 
+        if (response.getDocs() == null || response.getDocs().isEmpty()) {
+            System.out.println("Docs está vazio!");
+        } else {
+            System.out.println("Docs encontrados: " + response.getDocs().size());
+            response.getDocs().forEach(doc -> System.out.println(doc.getTitle()));
+        }
+
         return response.getDocs()
                 .stream()
                 .limit(limit)
