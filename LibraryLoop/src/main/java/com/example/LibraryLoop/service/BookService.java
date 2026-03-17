@@ -7,15 +7,12 @@ import com.example.LibraryLoop.dto.book.BookSearchDTO;
 import com.example.LibraryLoop.dto.GutendexResponse;
 import com.example.LibraryLoop.dto.read.ReadLinkDTO;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+
 
 import static com.example.LibraryLoop.client.OpenLibraryClient.restTemplate;
 
@@ -51,6 +48,21 @@ public class BookService {
                 .toList();
     }
 
+    public List<String> getBookPages(Long id) {
+
+        String fullText = readBook(id);
+
+        int pageSize = 1000; // caracteres por página
+
+        List<String> pages = new ArrayList<>();
+
+        for (int i = 0; i < fullText.length(); i += pageSize) {
+            pages.add(fullText.substring(i, Math.min(i + pageSize, fullText.length())));
+        }
+
+        return pages;
+    }
+
     public String readBook(Long id) {
 
         String url = "https://gutendex.com/books/" + id;
@@ -65,7 +77,7 @@ public class BookService {
         String textUrl = response.getFormats()
                 .entrySet()
                 .stream()
-                .filter(f -> f.getKey().contains("text/plain"))
+                .filter(f -> f.getKey().contains("text/html"))
                 .findFirst()
                 .map(Map.Entry::getValue)
                 .orElse(null);
@@ -74,19 +86,21 @@ public class BookService {
             return "Livro não possui versão em texto";
         }
 
-        ResponseEntity<String> result =
-                restTemplate.exchange(textUrl, HttpMethod.GET, null, String.class);
+        String book = restTemplate.getForObject(textUrl, String.class);
 
-        // se veio redirect
-        if (result.getStatusCode().value() == 302) {
-
-            String redirectUrl =
-                    Objects.requireNonNull(result.getHeaders().getLocation()).toString();
-
-            return restTemplate.getForObject(redirectUrl, String.class);
+        if (book == null) {
+            return "Erro ao carregar o livro";
         }
 
-        return result.getBody();
+        book = book.replace("\uFEFF", "");
+        book = book.replaceAll("([a-z])([A-Z])", "$1 $2");
+        book = book.replaceAll("\\r", "");
+        book = book.replaceAll("([.,;:])([A-Za-z])", "$1 $2");
+        book = book.replaceAll("\\n+", "\n\n");
+        book = book.replaceAll(" +", " ");
+
+
+        return restTemplate.getForObject(textUrl, String.class);
     }
 
     public ReadLinkDTO getReadLink(String bookId) {

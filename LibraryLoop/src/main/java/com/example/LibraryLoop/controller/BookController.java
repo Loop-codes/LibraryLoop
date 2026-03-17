@@ -22,6 +22,18 @@ public class BookController {
         return service.getReadLink(workId);
     }
 
+    @GetMapping("/{id}/page/{page}")
+    public String getPage(@PathVariable Long id, @PathVariable int page) {
+
+        List<String> pages = service.getBookPages(id);
+
+        if (page < 1 || page > pages.size()) {
+            return "Página inválida";
+        }
+
+        return pages.get(page - 1);
+    }
+
     // 📚 nova rota (ler livro completo Gutendex)
     @GetMapping("/{id}/read")
     public String readBook(@PathVariable Long id) {
