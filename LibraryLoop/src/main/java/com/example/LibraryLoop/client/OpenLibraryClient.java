@@ -8,7 +8,7 @@ import org.springframework.web.client.RestTemplate;
 @Component
 public class OpenLibraryClient {
 
-    private static RestTemplate restTemplate;
+    public static RestTemplate restTemplate;
 
     private static final String BASE_URL = "https://openlibrary.org";
 

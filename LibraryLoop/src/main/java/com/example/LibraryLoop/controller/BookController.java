@@ -16,11 +16,19 @@ public class BookController {
 
     private final BookService service;
 
-    @GetMapping("/{workId}/read")
+    // 🔗 rota antiga (link externo)
+    @GetMapping("/{workId}/link")
     public ReadLinkDTO getReadLink(@PathVariable String workId) {
         return service.getReadLink(workId);
     }
 
+    // 📚 nova rota (ler livro completo Gutendex)
+    @GetMapping("/{id}/read")
+    public String readBook(@PathVariable Long id) {
+        return service.readBook(id);
+    }
+
+    // 🔎 buscar livros
     @GetMapping("/search")
     public List<BookSearchDTO> searchBooks(
             @RequestParam String title,

@@ -1,69 +1,98 @@
 package com.example.LibraryLoop.service;
 
-import com.example.LibraryLoop.client.OpenLibraryClient;
+import com.example.LibraryLoop.client.GutendexClient;
+import com.example.LibraryLoop.dto.GutendexAuthor;
+import com.example.LibraryLoop.dto.GutendexBookResponse;
 import com.example.LibraryLoop.dto.book.BookSearchDTO;
-import com.example.LibraryLoop.dto.edition.OpenLibraryEditionsResponse;
-import com.example.LibraryLoop.dto.openLibrary.OpenLibraryResponse;
+import com.example.LibraryLoop.dto.GutendexResponse;
 import com.example.LibraryLoop.dto.read.ReadLinkDTO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+
+import static com.example.LibraryLoop.client.OpenLibraryClient.restTemplate;
 
 @Service
 @RequiredArgsConstructor
 public class BookService {
 
-    private final OpenLibraryClient openLibraryClient;
+    private final GutendexClient gutendexClient;
 
-    public ReadLinkDTO getReadLink(String workId) {
-
-        OpenLibraryEditionsResponse response =
-                openLibraryClient.getEditions(workId);
-
-        if (response.getEntries() == null) {
-            return new ReadLinkDTO(false, null);
-        }
-
-        for (OpenLibraryEditionsResponse.EditionDoc edition : response.getEntries()) {
-
-            if (edition.getOcaid() != null) {
-
-                String link = "https://archive.org/details/" + edition.getOcaid();
-
-                return new ReadLinkDTO(true, link);
-            }
-        }
-
-        return new ReadLinkDTO(false, null);
-    }
 
     public List<BookSearchDTO> searchBooks(String title, int limit) {
 
-        OpenLibraryResponse response =
-                OpenLibraryClient.searchBooks(title);
+        GutendexResponse response =
+                gutendexClient.searchBooks(title);
 
-        if (response.getDocs() == null || response.getDocs().isEmpty()) {
-            System.out.println("Docs está vazio!");
-        } else {
-            System.out.println("Docs encontrados: " + response.getDocs().size());
-            response.getDocs().forEach(doc -> System.out.println(doc.getTitle()));
-        }
-
-        return response.getDocs()
+        return response.getResults()
                 .stream()
                 .limit(limit)
-                .map(doc -> new BookSearchDTO(
-                        doc.getKey().replace("/works/", ""),
-                        doc.getTitle(),
-                        doc.getAuthor_name(),
-                        doc.getAuthor_key(),
-                        doc.getCover_i(),
-                        doc.getFirst_publish_year(),
-                        doc.getLanguage(),
-                        doc.getHas_fulltext(),
-                        doc.getEdition_count()
+                .map(book -> new BookSearchDTO(
+                        String.valueOf(book.getId()),
+                        book.getTitle(),
+                        book.getAuthors()
+                                .stream()
+                                .map(GutendexAuthor::getName)
+                                .toList(),
+                        null,
+                        null,
+                        null,
+                        null,
+                        true,
+                        null
                 ))
                 .toList();
+    }
+
+    public String readBook(Long id) {
+
+        String url = "https://gutendex.com/books/" + id;
+
+        GutendexBookResponse response =
+                restTemplate.getForObject(url, GutendexBookResponse.class);
+
+        if (response == null || response.getFormats() == null) {
+            return "Livro não encontrado";
+        }
+
+        String textUrl = response.getFormats()
+                .entrySet()
+                .stream()
+                .filter(f -> f.getKey().contains("text/plain"))
+                .findFirst()
+                .map(Map.Entry::getValue)
+                .orElse(null);
+
+        if (textUrl == null) {
+            return "Livro não possui versão em texto";
+        }
+
+        ResponseEntity<String> result =
+                restTemplate.exchange(textUrl, HttpMethod.GET, null, String.class);
+
+        // se veio redirect
+        if (result.getStatusCode().value() == 302) {
+
+            String redirectUrl =
+                    Objects.requireNonNull(result.getHeaders().getLocation()).toString();
+
+            return restTemplate.getForObject(redirectUrl, String.class);
+        }
+
+        return result.getBody();
+    }
+
+    public ReadLinkDTO getReadLink(String bookId) {
+
+        String link = "https://www.gutenberg.org/ebooks/" + bookId;
+
+        return new ReadLinkDTO(true, link);
     }
 }
