@@ -52,7 +52,7 @@ public class BookController {
     }
 
     @GetMapping("/{id}/pages/{page}")
-    public ResponseEntity<PageResponse> getBookPage(
+     public ResponseEntity<PageResponse> getBookPage(
             @PathVariable Long id,
             @PathVariable int page
     ) {
@@ -66,8 +66,7 @@ public class BookController {
         return ResponseEntity.ok(
                 new PageResponse(page, pages.size(), pages.get(page))
         );
-    }
-
+    }   
 
     // 🔎 buscar livros
     @GetMapping(value = "/search")
