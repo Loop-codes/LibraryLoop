@@ -26,9 +26,7 @@ public class BookSearchDTO {
             Integer editionCount,
             List<String> language,
             Boolean hasFullText,
-            Integer ratingsAverage,
-            Boolean readable,
-            String source
+            Integer ratingsAverage
     ) {
         this.olid = olid;
         this.title = title;
