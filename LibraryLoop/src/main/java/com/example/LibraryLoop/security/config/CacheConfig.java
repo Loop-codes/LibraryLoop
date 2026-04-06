@@ -1,4 +1,4 @@
-package com.example.LibraryLoop.config;
+package com.example.LibraryLoop.security.config;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import org.springframework.cache.CacheManager;

@@ -1,11 +1,9 @@
 package com.example.LibraryLoop.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-
-
 import lombok.*;
+
+import java.util.List;
 
 @Entity
 @Table(name = "app_user")
@@ -20,6 +18,13 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true)
     private String username;
+
+    @Column(unique = true)
+    private String email;
+
+    @Column(nullable = false)
+    private String password;
+
+    private String savedBook;
 }

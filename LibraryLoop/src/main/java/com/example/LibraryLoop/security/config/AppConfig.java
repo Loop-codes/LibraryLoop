@@ -1,4 +1,4 @@
-package com.example.LibraryLoop.config;
+package com.example.LibraryLoop.security.config;
 
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 
